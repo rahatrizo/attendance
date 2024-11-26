@@ -1,6 +1,5 @@
 const fileInput = document.querySelector('[name=file-upload]')
 const fileUploadForm = document.querySelector('[name=file-upload-form]')
-console.log(fileUploadForm)
 
 fileUploadForm.addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -33,7 +32,6 @@ fileUploadForm.addEventListener('submit', (ev) => {
         });
     } else {
         console.error('No file selected.');
+				alert('No file selected.')
     }
 })
-
-console.log('hello world')
