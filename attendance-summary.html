@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Attendance Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Summary of Employee Attendance</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>SL</th>
+                <th>Employee Name</th>
+                <th>Total Days</th>
+                <th>Working Days</th>
+                <th>Holidays</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Late</th>
+            </tr>
+        </thead>
+        <tbody id="summaryTableBody"></tbody>
+    </table>
+
+    <script>
+        // Sample attendance data
+        const attendanceData = [
+            {
+                Name: "Mahmud Hasan",
+                Date: "2024-12-01",
+                "Clock In": "09:15",
+                "Clock Out": "17:00",
+            },
+            {
+                Name: "Mahmud Hasan",
+                Date: "2024-12-02",
+                "Clock In": "08:45",
+                "Clock Out": "17:15",
+            },
+            {
+                Name: "Md. Faruk Hosen",
+                Date: "2024-12-01",
+                "Clock In": null,
+                "Clock Out": null,
+            },
+            {
+                Name: "Md. Faruk Hosen",
+                Date: "2024-12-02",
+                "Clock In": "09:30",
+                "Clock Out": "17:10",
+            },
+            // Add more records as needed...
+        ];
+
+        // Function to generate the updated summary report
+        function generateUpdatedSummaryReport(attendanceData) {
+            const summaryReport = [];
+
+            // Group attendance data by employee
+            const groupedData = attendanceData.reduce((acc, record) => {
+                const { Name, Date, "Clock In": clockIn, "Clock Out": clockOut } = record;
+
+                if (!acc[Name]) {
+                    acc[Name] = {
+                        Name,
+                        totalDays: 0,
+                        workingDays: 0,
+                        holidays: 0,
+                        present: 0,
+                        absent: 0,
+                        late: 0,
+                    };
+                }
+
+                const employee = acc[Name];
+                employee.totalDays++;
+
+                // Calculate if the day is a holiday or a working day
+                const day = new Date(Date).getDay();
+                if (day === 5) {
+                    // Friday is a holiday
+                    employee.holidays++;
+                } else {
+                    // Other days are working days
+                    employee.workingDays++;
+                }
+
+                // Check if present or absent
+                if (clockIn && clockOut) {
+                    employee.present++;
+                    // Check if late (Clock In after 9:00 AM)
+                    if (clockIn > "09:00") {
+                        employee.late++;
+                    }
+                } else {
+                    employee.absent++;
+                }
+
+                return acc;
+            }, {});
+
+            // Convert grouped data to an array for rendering
+            for (const employeeName in groupedData) {
+                summaryReport.push(groupedData[employeeName]);
+            }
+
+            return summaryReport;
+        }
+
+        // Function to render the summary report in the table
+        function renderUpdatedSummaryReport(report) {
+            const tableBody = document.getElementById("summaryTableBody");
+            tableBody.innerHTML = ""; // Clear existing rows
+
+            report.forEach((employee, index) => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${employee.Name}</td>
+                    <td>${employee.totalDays}</td>
+                    <td>${employee.workingDays}</td>
+                    <td>${employee.holidays}</td>
+                    <td>${employee.present}</td>
+                    <td>${employee.absent}</td>
+                    <td>${employee.late}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Generate the report and render it
+        const updatedReport = generateUpdatedSummaryReport(attendanceData);
+        renderUpdatedSummaryReport(updatedReport);
+    </script>
+</body>
+</html>
