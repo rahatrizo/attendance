@@ -151,6 +151,7 @@
 					<th>Day</th>
 					<th>Clock In</th>
 					<th>Clock Out</th>
+					<th>Late (Y/N)</th> <!-- New Late Column -->
 					<th>Absent (Y/N)</th>
 				</tr>
 			</thead>
@@ -197,78 +198,108 @@
 			}
 
 			function populateAttendanceTable(data) {
-				const tableBody = document.getElementById('attendanceTableBody');
-				tableBody.innerHTML = ''; // Clear existing rows
+    const tableBody = document.getElementById('attendanceTableBody');
+    tableBody.innerHTML = ''; // Clear existing rows
 
-				data.forEach((item, index) => {
-					const row = document.createElement('tr');
+    const lateThreshold = "09:00"; // Late threshold time
 
-					// Create cells for each column
-					const slCell = document.createElement('td');
-					slCell.textContent = index + 1; // Serial number
-					row.appendChild(slCell);
+    data.forEach((item, index) => {
+        const row = document.createElement('tr');
 
-					const nameCell = document.createElement('td');
-					nameCell.textContent = item.Name;
-					row.appendChild(nameCell);
+        // SL column
+        const slCell = document.createElement('td');
+        slCell.textContent = index + 1; // Serial number
+        row.appendChild(slCell);
 
-					const dateCell = document.createElement('td');
-					dateCell.textContent = item.Date;
-					row.appendChild(dateCell);
+        // Name column
+        const nameCell = document.createElement('td');
+        nameCell.textContent = item.Name;
+        row.appendChild(nameCell);
 
-					const dayCell = document.createElement('td');
-					const date = new Date(item.Date);
-					const options = { weekday: 'long' }; // Get the day of the week
-					dayCell.textContent = date.toLocaleDateString('en-US', options);
-					row.appendChild(dayCell);
+        // Date column
+        const dateCell = document.createElement('td');
+        dateCell.textContent = item.Date;
+        row.appendChild(dateCell);
 
-					const clockInCell = document.createElement('td');
-					clockInCell.textContent = item["Clock In"] || 'N/A'; // Display 'N/A' if null
-					row.appendChild(clockInCell);
+        // Day column
+        const dayCell = document.createElement('td');
+        const date = new Date(item.Date);
+        const options = { weekday: 'long' }; // Get the day of the week
+        dayCell.textContent = date.toLocaleDateString('en-US', options);
+        row.appendChild(dayCell);
 
-					const clockOutCell = document.createElement('td');
-					clockOutCell.textContent = item["Clock Out"] || 'N/A'; // Display 'N/A' if null
-					row.appendChild(clockOutCell);
+        // Clock In column
+        const clockInCell = document.createElement('td');
+        clockInCell.textContent = item["Clock In"] || 'N/A'; // Display 'N/A' if null
+        row.appendChild(clockInCell);
 
-					const absentCell = document.createElement('td');
-					absentCell.textContent = (item["Clock In"] === null && item["Clock Out"] === null) ? 'Y' : 'N'; // Determine if absent
-					row.appendChild(absentCell);
+        // Clock Out column
+        const clockOutCell = document.createElement('td');
+        clockOutCell.textContent = item["Clock Out"] || 'N/A'; // Display 'N/A' if null
+        row.appendChild(clockOutCell);
 
-					// Append the row to the table body
-					tableBody.appendChild(row);
-				});
+        // Absent column
+        const absentCell = document.createElement('td');
+        absentCell.textContent =
+            item["Clock In"] === null && item["Clock Out"] === null ? 'Y' : 'N'; // Determine if absent
+        row.appendChild(absentCell);
 
-				// Show the table
-				document.getElementById('attendanceTable').style.display = 'table';
-			}
+        // Late column
+        const lateCell = document.createElement('td');
+        if (item["Clock In"] && item["Clock In"] > lateThreshold) {
+            lateCell.textContent = 'Y'; // Late
+        } else if (item["Clock In"]) {
+            lateCell.textContent = 'N'; // Not Late
+        } else {
+            lateCell.textContent = 'N/A'; // No Clock In data
+        }
+        row.appendChild(lateCell);
+
+        // Append the row to the table body
+        tableBody.appendChild(row);
+    });
+
+    // Show the table
+    document.getElementById('attendanceTable').style.display = 'table';
+}
+
 
 			function updateReport(data) {
-				const employeeNameElem = document.querySelector('#employeeName')
-				const totalLateElem = document.querySelector('#totalLate')
-				const totalAbsentElem = document.querySelector('#totalAbsent')
-				
-				console.log('Hello report data.')
-				console.table(data)
+    const employeeNameElem = document.querySelector('#employeeName');
+    const totalLateElem = document.querySelector('#totalLate');
+    const totalAbsentElem = document.querySelector('#totalAbsent');
 
-				const allNames = []
-				let totalLate = 0
-				let totalAbsent = 0
+    // Variables to calculate totals
+    const allNames = [];
+    let totalLate = 0;
+    let totalAbsent = 0;
 
-				for (let row of data) {
-					allNames.push(row['Name'])
-					if (row['Late']) totalLate++
-					if (row['Absent']) totalAbsent++
-				}
-				uniqueNames = [...new Set(allNames)]
-				if (uniqueNames.length > 1)
-					employeeNameElem.innerText = '<Multiple Users Selected>'
-				else
-					employeeNameElem.innerText = uniqueNames.join(', ')
-				totalLateElem.innerText = totalLate
-				totalAbsentElem.innerText = totalAbsent
+    data.forEach((row) => {
+        allNames.push(row['Name']); // Collect employee names
+        if (row["Clock In"] && row["Clock In"] > "09:00") {
+            totalLate++; // Increment late count if Clock In > 09:00
+        }
+        if (row["Clock In"] === null && row["Clock Out"] === null) {
+            totalAbsent++; // Increment absent count if both Clock In and Clock Out are null
+        }
+    });
 
-				document.querySelector('#summaryReport').style = 'display: block;'
-			}
+    // Determine if multiple employees are selected
+    const uniqueNames = [...new Set(allNames)];
+    if (uniqueNames.length > 1) {
+        employeeNameElem.innerText = '<Multiple Users Selected>';
+    } else {
+        employeeNameElem.innerText = uniqueNames.join(', ');
+    }
+
+    // Update summary values
+    totalLateElem.innerText = totalLate;
+    totalAbsentElem.innerText = totalAbsent;
+
+    // Display the summary report
+    document.querySelector('#summaryReport').style.display = 'block';
+}
+
 		</script>
 
 	</body>
